@@ -13,7 +13,7 @@
 
 #include "../module_headers/module.h"
 #include "../module_headers/robot_module.h"
-#include "lego_nxt_module.h"
+#include "lego_nxt_robot_module.h"
 #include "SimpleIni.h"
 
 EXTERN_C IMAGE_DOS_HEADER __ImageBase;
