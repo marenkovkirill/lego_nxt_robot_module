@@ -203,6 +203,9 @@ inline void isFiveMode(int mode){
 
 void LegoRobotModule::destroy() {
 	for (unsigned int j = 0; j < COUNT_LEGO_FUNCTIONS; ++j) {
+		if (lego_functions[j]->count_params) {
+			delete[] lego_functions[j]->params;
+		}
 		delete lego_functions[j];
 	}
 	for (unsigned int j = 0; j < COUNT_AXIS; ++j) {
