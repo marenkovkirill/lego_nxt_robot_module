@@ -222,7 +222,7 @@ int LegoRobotModule::init(){
 
 	HMODULE lr_handle;
 
-	lr_handle = GetModuleHandleW(L"nxt_module.dll");
+	lr_handle = GetModuleHandleW(L"lego_nxt_module.dll");
 
 	WCHAR DllPath[MAX_PATH] = { 0 };
 	
