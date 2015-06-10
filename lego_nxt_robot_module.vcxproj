@@ -11,9 +11,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{8FC03005-1226-45C8-90AC-DC9EACD8740F}</ProjectGuid>
+    <ProjectGuid>{328EAAE5-A62A-4FE7-A963-8900E4499E32}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>lego_nxt_robot_module</RootNamespace>
+    <RootNamespace>nxt_module</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -29,6 +29,7 @@
     <PlatformToolset>v120</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
+    <CLRSupport>true</CLRSupport>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -42,9 +43,17 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
+    <OutDir>build\Debug\</OutDir>
+    <TargetName>ev3_module</TargetName>
+    <IncludePath>G:\TempRepo\module_headers\;$(IncludePath)</IncludePath>
+    <IncludePath>G:\TempRepo\simpleini\;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
+    <OutDir>build\Release\</OutDir>
+    <TargetName>ev3_module</TargetName>
+    <IncludePath>G:\TempRepo\module_headers\;$(IncludePath)</IncludePath>
+    <IncludePath>G:\TempRepo\simpleini\;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -52,7 +61,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;LEGO_NXT_ROBOT_MODULE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;NXT_MODULE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
     </ClCompile>
     <Link>
@@ -68,7 +77,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;LEGO_NXT_ROBOT_MODULE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;NXT_MODULE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
     </ClCompile>
     <Link>
@@ -79,16 +88,18 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\module_headers\module.h" />
-    <ClInclude Include="..\module_headers\robot_module.h" />
-    <ClInclude Include="lego_nxt_robot_module.h" />
-    <ClInclude Include="SimpleIni.h" />
+    <ClInclude Include="..\..\..\TempRepo\lego_nxt_robot_module\lego_nxt_robot_module.h" />
+    <ClInclude Include="..\..\..\TempRepo\module_headers\control_module.h" />
+    <ClInclude Include="..\..\..\TempRepo\module_headers\function_module.h" />
+    <ClInclude Include="..\..\..\TempRepo\module_headers\module.h" />
+    <ClInclude Include="..\..\..\TempRepo\module_headers\robot_module.h" />
+    <ClInclude Include="..\..\..\TempRepo\simpleini\SimpleIni.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="lego_nxt_robot_module.cpp" />
+    <ClCompile Include="..\..\..\TempRepo\lego_nxt_robot_module\lego_nxt_robot_module.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\lego_communication_library\lego_communication_library.csproj">
+    <ProjectReference Include="..\..\..\VSProjects\test_lego_robot\lego_communication_library\lego_communication_library.csproj">
       <Project>{7b70c921-11b2-4dde-9cd5-fd6e4b58c863}</Project>
     </ProjectReference>
   </ItemGroup>
