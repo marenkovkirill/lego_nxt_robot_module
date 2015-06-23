@@ -387,9 +387,8 @@ FunctionResult* LegoRobot::executeFunction(system_value functionId, void **args)
 		return NULL;
 	}
 	
-	variable_value rez=0;
-	bool throw_exception = false;
 	try {
+    variable_value rez = 0;
 		switch (functionId) {
 		case 1: {
 			wchar_t input1 = *(const char *)args[0];
@@ -446,13 +445,9 @@ FunctionResult* LegoRobot::executeFunction(system_value functionId, void **args)
 		case 8: {
 			wchar_t input1 = *(const char *)args[0];
 			variable_value input2 = *(variable_value *)(args[1]);
-			variable_value input3 = *(variable_value *)(args[2]);
 			isMotor(input1);
 			isSpeed(input2);
-			char  temp = (char) input2;
-			temp = (char) input2;
-			int ttemp = (int)input2;
-			lego_communication_library::NXT_brick::getInstance()->motorSetSpeed(robot_index, input1,ttemp); 
+			lego_communication_library::NXT_brick::getInstance()->motorSetSpeed(robot_index, input1, (int)input2); 
 			break;
 		}
 		case 9: {
