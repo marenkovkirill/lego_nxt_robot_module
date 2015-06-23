@@ -11,8 +11,8 @@
 #include <vector>
 #include <map>
 
-#include "module.h"
-#include "robot_module.h"
+#include "../module_headers/module.h"
+#include "../module_headers/robot_module.h"
 #include "lego_nxt_robot_module.h"
 #include "SimpleIni.h"
 
@@ -215,16 +215,19 @@ void LegoRobotModule::destroy() {
 	delete[] robot_axis;
 	delete this;
 };
-
 int LegoRobotModule::init(){
 	InitializeCriticalSection(&LRM_cs);
 	CSimpleIniA ini;
 	ini.SetMultiKey(true);
 
+	HMODULE lr_handle;
+
+	lr_handle = GetModuleHandleW(L"lego_nxt_module.dll");
+
 	WCHAR DllPath[MAX_PATH] = { 0 };
 	
-	GetModuleFileNameW((HINSTANCE)&__ImageBase, DllPath, _countof(DllPath));
-
+	//GetModuleFileNameW((HINSTANCE)&__ImageBase, DllPath, _countof(DllPath));
+	GetModuleFileNameW(lr_handle, DllPath, _countof(DllPath));
 	WCHAR *tmp = wcsrchr(DllPath, L'\\');
 	WCHAR ConfigPath[MAX_PATH] = { 0 };
 	size_t path_len = tmp - DllPath;
@@ -235,22 +238,48 @@ int LegoRobotModule::init(){
 		printf("Can't load '%s' file!\n", ConfigPath);
 		return 1;
 	}
-
-	allow_dynamic = ini.GetBoolValue("options", "dynamic_connection", false);
-
 	CSimpleIniA::TNamesDepend values;
 	ini.GetAllValues("connections", "connection", values);
 	CSimpleIniA::TNamesDepend::const_iterator ini_value;
-	for(ini_value = values.begin(); ini_value != values.end(); ++ini_value) {
+	for (ini_value = values.begin(); ini_value != values.end(); ++ini_value) {
 		printf("- %s\n", ini_value->pItem);
 		std::string connection(ini_value->pItem);
-		
-		LegoRobot *lego_robot = new LegoRobot(connection, allow_dynamic);
+		System::String^ connection_c = gcnew System::String(connection.c_str());
+		lego_communication_library::NXT_brick^ singletoneBrick = lego_communication_library::NXT_brick::getInstance();
+		int index_robot = singletoneBrick->createBrick(connection_c);
+		LegoRobot *lego_robot = new LegoRobot(index_robot);
+		lego_robot->connection = connection;
 		aviable_connections[connection] = lego_robot;
 	}
 	return 0;
 };
 
+bool LegoRobot::require(){
+	if (!isAviable) { return false; }
+
+	lego_communication_library::NXT_brick^ singletoneBrick = lego_communication_library::NXT_brick::getInstance();
+	try {
+		singletoneBrick->connectBrick(robot_index);
+	}
+	catch (...) {
+		singletoneBrick->disconnectBrick(robot_index);
+		return false;
+	}
+
+	printf("Connected to %s robot\n", connection.c_str());
+	isAviable = false;
+
+	return true;
+};
+
+void LegoRobot::free(){
+	if (isAviable) {
+		return;
+	}
+	isAviable = true;
+	lego_communication_library::NXT_brick^ singletoneBrick = lego_communication_library::NXT_brick::getInstance();
+	singletoneBrick->disconnectBrick(robot_index);
+};
 
 Robot* LegoRobotModule::robotRequire(){
 	EnterCriticalSection(&LRM_cs);
@@ -263,51 +292,6 @@ Robot* LegoRobotModule::robotRequire(){
 	LeaveCriticalSection(&LRM_cs);
 	return NULL;
 };
-
-bool LegoRobot::require(){
-	if (!is_aviable) { 
-		return false; 
-	}
-
-	if (allow_dynamic) {
-		if (!connect()) {
-			return false;
-		}
-	}
-
-	is_aviable = false;
-	return true;
-};
-
-void LegoRobot::free(){
-	if (is_aviable) {
-		return;
-	}
-	is_aviable = true;
-
-	if (allow_dynamic) {
-		disconnect();
-		Sleep(1000);
-	}
-};
-
-bool LegoRobot::connect(){
-	lego_communication_library::NXT_brick^ singletoneBrick = lego_communication_library::NXT_brick::getInstance();
-	try {
-		singletoneBrick->connectBrick(robot_index);
-		printf("Connected to %s robot\n", connection.c_str());
-	} catch (...) {
-		singletoneBrick->disconnectBrick(robot_index);
-		return false;
-	}
-	return true;
-}
-
-void LegoRobot::disconnect(){
-	lego_communication_library::NXT_brick^ singletoneBrick = lego_communication_library::NXT_brick::getInstance();
-	singletoneBrick->disconnectBrick(robot_index);
-}
-
 void LegoRobotModule::robotFree(Robot *robot){
 	EnterCriticalSection(&LRM_cs);
 	LegoRobot *lego_robot = reinterpret_cast<LegoRobot*>(robot);
@@ -319,7 +303,6 @@ void LegoRobotModule::robotFree(Robot *robot){
 	}
 	LeaveCriticalSection(&LRM_cs);
 };
-
 AxisData **LegoRobotModule::getAxis(unsigned int *count_axis){
 	(*count_axis) = COUNT_AXIS;
 	return robot_axis;
@@ -667,29 +650,12 @@ FunctionResult* LegoRobot::executeFunction(system_value functionId, void **args)
 	};
 };
 
-int LegoRobotModule::startProgram(int uniq_index) {
+int LegoRobotModule::startProgram(int uniq_index, void *buffer, unsigned int buffer_length) {
 	return 0;
-}
-
-void LegoRobotModule::readPC(void *buffer, unsigned int buffer_length) {
 }
 
 int LegoRobotModule::endProgram(int uniq_index) {
 	return 0;
-}
-
-LegoRobot::LegoRobot(std::string connection, bool allow_dynamic): 
-	connection(connection), is_aviable(true), is_trackVehicleOn(false), is_locked(false), allow_dynamic(allow_dynamic) {
-	
-	System::String^ connection_c = gcnew System::String(connection.c_str());
-	lego_communication_library::NXT_brick^ singletoneBrick = lego_communication_library::NXT_brick::getInstance();
-	robot_index = singletoneBrick->createBrick(connection_c);
-
-	if (!allow_dynamic) {
-		if (!connect()) {
-			is_aviable = false;
-		}
-	}
 }
 
 
