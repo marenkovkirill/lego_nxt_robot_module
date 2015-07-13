@@ -235,7 +235,7 @@ int LegoRobotModule::init(){
 	wcscat(ConfigPath, L"\\config.ini");
 
 	if (ini.LoadFile(ConfigPath) < 0) {
-		printf("Can't load '%s' file!\n", ConfigPath);
+		colorPrintf(ConsoleColor(ConsoleColor::red),"Can't load '%s' file!\n", ConfigPath);
 		return 1;
 	}
 
@@ -245,7 +245,7 @@ int LegoRobotModule::init(){
 	ini.GetAllValues("connections", "connection", values);
 	CSimpleIniA::TNamesDepend::const_iterator ini_value;
 	for(ini_value = values.begin(); ini_value != values.end(); ++ini_value) {
-		printf("- %s\n", ini_value->pItem);
+		colorPrintf(ConsoleColor(ConsoleColor::green),"- %s\n", ini_value->pItem);
 		std::string connection(ini_value->pItem);
 		
 		LegoRobot *lego_robot = new LegoRobot(connection, allow_dynamic);
@@ -298,7 +298,7 @@ bool LegoRobot::connect(){
 	lego_communication_library::NXT_brick^ singletoneBrick = lego_communication_library::NXT_brick::getInstance();
 	try {
 		singletoneBrick->connectBrick(robot_index);
-		printf("Connected to %s robot\n", connection.c_str());
+		colorPrintf(ConsoleColor(ConsoleColor::yellow),"Connected to %s robot\n", connection.c_str());
 	} catch (...) {
 		singletoneBrick->disconnectBrick(robot_index);
 		return false;
