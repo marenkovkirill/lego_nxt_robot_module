@@ -235,7 +235,7 @@ int LegoRobotModule::init(){
 	wcscat(ConfigPath, L"\\config.ini");
 
 	if (ini.LoadFile(ConfigPath) < 0) {
-		printf("Can't load '%s' file!\n", ConfigPath);
+		colorPrintf(ConsoleColor(ConsoleColor::red),"Can't load '%s' file!\n", ConfigPath);
 		return 1;
 	}
 
@@ -245,7 +245,7 @@ int LegoRobotModule::init(){
 	ini.GetAllValues("connections", "connection", values);
 	CSimpleIniA::TNamesDepend::const_iterator ini_value;
 	for(ini_value = values.begin(); ini_value != values.end(); ++ini_value) {
-		printf("- %s\n", ini_value->pItem);
+		colorPrintf(ConsoleColor(ConsoleColor::green),"- %s\n", ini_value->pItem);
 		std::string connection(ini_value->pItem);
 		
 		LegoRobot *lego_robot = new LegoRobot(connection, allow_dynamic);
@@ -298,7 +298,7 @@ bool LegoRobot::connect(){
 	lego_communication_library::NXT_brick^ singletoneBrick = lego_communication_library::NXT_brick::getInstance();
 	try {
 		singletoneBrick->connectBrick(robot_index);
-		printf("Connected to %s robot\n", connection.c_str());
+		colorPrintf(ConsoleColor(ConsoleColor::yellow),"Connected to %s robot\n", connection.c_str());
 	} catch (...) {
 		singletoneBrick->disconnectBrick(robot_index);
 		return false;
@@ -373,8 +373,12 @@ void LegoRobot::axisControl(system_value axis_index, variable_value value){
 	};
 	};
 };
-void LegoRobotModule::prepare(colorPrintf_t *colorPrintf_p, colorPrintfVA_t *colorPrintfVA_p) {
-	colorPrintf = colorPrintf_p;
+
+void LegoRobotModule::prepare(colorPrintfModule_t *colorPrintf_p, colorPrintfModuleVA_t *colorPrintfVA_p) {
+	this->colorPrintf_p = colorPrintfVA_p;
+}
+void LegoRobot::prepare(colorPrintfRobot_t *colorPrintf_p, colorPrintfRobotVA_t *colorPrintfVA_p) {
+	this->colorPrintf_p = colorPrintfVA_p;
 }
 
 void *LegoRobotModule::writePC(unsigned int *buffer_length) {
@@ -678,10 +682,13 @@ int LegoRobotModule::endProgram(int uniq_index) {
 
 LegoRobot::LegoRobot(std::string connection, bool allow_dynamic): 
 	connection(connection), is_aviable(true), is_trackVehicleOn(false), is_locked(false), allow_dynamic(allow_dynamic) {
-	
+
 	System::String^ connection_c = gcnew System::String(connection.c_str());
 	lego_communication_library::NXT_brick^ singletoneBrick = lego_communication_library::NXT_brick::getInstance();
 	robot_index = singletoneBrick->createBrick(connection_c);
+
+	uniq_name = new char[40];
+	sprintf(uniq_name, "robot-%u", robot_index);
 
 	if (!allow_dynamic) {
 		if (!connect()) {
@@ -690,6 +697,23 @@ LegoRobot::LegoRobot(std::string connection, bool allow_dynamic):
 	}
 }
 
+LegoRobot::~LegoRobot(){
+	delete[] uniq_name;
+}
+
+void LegoRobotModule::colorPrintf(ConsoleColor colors, const char *mask, ...) {
+	va_list args;
+	va_start(args, mask);
+	(*colorPrintf_p)(this, colors, mask, args);
+	va_end(args);
+}
+
+void LegoRobot::colorPrintf(ConsoleColor colors, const char *mask, ...) {
+	va_list args;
+	va_start(args, mask);
+	(*colorPrintf_p)(this, uniq_name, colors, mask, args);
+	va_end(args);
+}
 
 __declspec(dllexport) RobotModule* getRobotModuleObject() {
 	return new LegoRobotModule();
