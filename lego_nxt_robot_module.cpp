@@ -11,6 +11,8 @@
 #include <vector>
 #include <map>
 
+#include "build_number.h"
+
 #include "module.h"
 #include "robot_module.h"
 #include "lego_nxt_robot_module.h"
