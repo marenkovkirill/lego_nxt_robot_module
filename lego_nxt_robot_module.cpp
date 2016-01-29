@@ -11,12 +11,16 @@
 #include <vector>
 #include <map>
 
+#include "build_number.h"
+
 #include "module.h"
 #include "robot_module.h"
 #include "lego_nxt_robot_module.h"
 #include "SimpleIni.h"
 
 EXTERN_C IMAGE_DOS_HEADER __ImageBase;
+
+#define IID "RCT.Lego_nxt_robot_module_v100"
 
 const unsigned int COUNT_LEGO_FUNCTIONS = 34;
 const unsigned int COUNT_AXIS = 9;
@@ -145,13 +149,19 @@ ADD_ROBOT_AXIS("moveMotorC", 1000, -1000) \
 ADD_ROBOT_AXIS("straight", 100, -100) \
 ADD_ROBOT_AXIS("rotation", 100, -100);
 
-const char *LegoRobotModule::getUID() { return "Lego_NXT_Module"; };
+const struct ModuleInfo &LegoRobotModule::getModuleInfo() { return *mi; }
 FunctionData **LegoRobotModule::getFunctions(unsigned int *count_functions) {
   *count_functions = COUNT_LEGO_FUNCTIONS;
   return lego_functions;
 };
 
 LegoRobotModule::LegoRobotModule() {
+  mi = new ModuleInfo;
+  mi->uid = IID;
+  mi->mode = ModuleInfo::Modes::PROD;
+  mi->version = BUILD_NUMBER;
+  mi->digest = NULL;
+
   lego_functions = new FunctionData *[COUNT_LEGO_FUNCTIONS];
   system_value function_id = 0;
   FunctionData::ParamTypes *Params = NULL;
@@ -204,6 +214,7 @@ inline void isFiveMode(int mode) {
 };
 
 void LegoRobotModule::destroy() {
+  delete mi;
   for (unsigned int j = 0; j < COUNT_LEGO_FUNCTIONS; ++j) {
     if (lego_functions[j]->count_params) {
       delete[] lego_functions[j]->params;
@@ -409,6 +420,7 @@ FunctionResult *LegoRobot::executeFunction(CommandMode mode,
     return NULL;
   }
 
+  FunctionResult *fr = NULL;
   try {
     variable_value rez = 0;
     switch (functionId) {
@@ -735,10 +747,11 @@ FunctionResult *LegoRobot::executeFunction(CommandMode mode,
         break;
       }
     };
-    return new FunctionResult(1, rez);
+    fr = new FunctionResult(FunctionResult::Types::VALUE, rez);
   } catch (...) {
-    return new FunctionResult(0);
+    fr = new FunctionResult(FunctionResult::Types::EXCEPTION);
   };
+  return fr;
 };
 
 int LegoRobotModule::startProgram(int uniq_index) { return 0; }
@@ -783,6 +796,10 @@ void LegoRobot::colorPrintf(ConsoleColor colors, const char *mask, ...) {
   (*colorPrintf_p)(this, uniq_name, colors, mask, args);
   va_end(args);
 }
+
+PREFIX_FUNC_DLL unsigned short getRobotModuleApiVersion() {
+  return ROBOT_MODULE_API_VERSION;
+};
 
 __declspec(dllexport) RobotModule *getRobotModuleObject() {
   return new LegoRobotModule();
